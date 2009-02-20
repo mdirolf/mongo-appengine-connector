@@ -156,6 +156,8 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
     assert isinstance(app_id, basestring) and app_id != ''
     self.__app_id = app_id
     self.__require_indexes = require_indexes
+
+    # TODO should be a way to configure the connection
     self.__db = Connection()[app_id]
 
     # NOTE our query history gets reset each time the server restarts...

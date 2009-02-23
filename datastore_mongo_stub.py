@@ -56,37 +56,9 @@ warnings.filterwarnings('ignore', 'tempnam is a potential security risk')
 entity_pb.Reference.__hash__ = lambda self: hash(self.Encode())
 datastore_pb.Query.__hash__ = lambda self: hash(self.Encode())
 
-
 _MAXIMUM_RESULTS = 1000
-
-
 _MAX_QUERY_OFFSET = 1000
-
-
 _MAX_QUERY_COMPONENTS = 100
-
-
-class _StoredEntity(object):
-  """Simple wrapper around an entity stored by the stub.
-
-  Public properties:
-    protobuf: Native protobuf Python object, entity_pb.EntityProto.
-    encoded_protobuf: Encoded binary representation of above protobuf.
-    native: datastore.Entity instance.
-  """
-
-  def __init__(self, entity):
-    """Create a _StoredEntity object and store an entity.
-
-    Args:
-      entity: entity_pb.EntityProto to store.
-    """
-    self.protobuf = entity
-
-    self.encoded_protobuf = entity.Encode()
-
-    self.native = datastore.Entity._FromPb(entity)
-
 
 class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
   """ Persistent stub for the Python datastore API.
@@ -95,40 +67,6 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
   protocol buffers. A DatastoreMongoStub instance handles a single app's data
   and is backed by files on disk.
   """
-  _PROPERTY_TYPE_TAGS = {
-    datastore_types.Blob: entity_pb.PropertyValue.kstringValue,
-    bool: entity_pb.PropertyValue.kbooleanValue,
-    datastore_types.Category: entity_pb.PropertyValue.kstringValue,
-    datetime.datetime: entity_pb.PropertyValue.kint64Value,
-    datastore_types.Email: entity_pb.PropertyValue.kstringValue,
-    float: entity_pb.PropertyValue.kdoubleValue,
-    datastore_types.GeoPt: entity_pb.PropertyValue.kPointValueGroup,
-    datastore_types.IM: entity_pb.PropertyValue.kstringValue,
-    int: entity_pb.PropertyValue.kint64Value,
-    datastore_types.Key: entity_pb.PropertyValue.kReferenceValueGroup,
-    datastore_types.Link: entity_pb.PropertyValue.kstringValue,
-    long: entity_pb.PropertyValue.kint64Value,
-    datastore_types.PhoneNumber: entity_pb.PropertyValue.kstringValue,
-    datastore_types.PostalAddress: entity_pb.PropertyValue.kstringValue,
-    datastore_types.Rating: entity_pb.PropertyValue.kint64Value,
-    str: entity_pb.PropertyValue.kstringValue,
-    datastore_types.Text: entity_pb.PropertyValue.kstringValue,
-    type(None): 0,
-    unicode: entity_pb.PropertyValue.kstringValue,
-    users.User: entity_pb.PropertyValue.kUserValueGroup,
-    }
-
-  WRITE_ONLY = entity_pb.CompositeIndex.WRITE_ONLY
-  READ_WRITE = entity_pb.CompositeIndex.READ_WRITE
-  DELETED = entity_pb.CompositeIndex.DELETED
-  ERROR = entity_pb.CompositeIndex.ERROR
-
-  _INDEX_STATE_TRANSITIONS = {
-    WRITE_ONLY: frozenset((READ_WRITE, DELETED, ERROR)),
-    READ_WRITE: frozenset((DELETED,)),
-    ERROR: frozenset((DELETED,)),
-    DELETED: frozenset((ERROR,)),
-  }
 
   def __init__(self,
                app_id,
@@ -164,8 +102,9 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
     # should this be fixed?
     self.__query_history = {}
 
-    self.__index_id_lock = threading.Lock()
     self.__next_index_id = 1
+    self.__indexes = {}
+    self.__index_lock = threading.Lock()
 
     self.__cursor_lock = threading.Lock()
     self.__next_cursor = 1
@@ -436,7 +375,8 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
       return (key, {'$gte': value})
     elif operation == '==':
       return (key, value)
-    raise datastore_errors.InternalError("operation %s doesn't work..." % operation)
+    raise apiproxy_errors.ApplicationError(
+      datastore_pb.Error.BAD_REQUEST, "Can't handle operation %r." % operation)
 
   def _Dynamic_RunQuery(self, query, query_result):
     if query.has_offset() and query.offset() > _MAX_QUERY_OFFSET:
@@ -454,36 +394,22 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
 
     app = query.app()
 
-# TODO do this check
-#     if self.__require_indexes:
-#       required, kind, ancestor, props, num_eq_filters = datastore_index.CompositeIndexForQuery(query)
-#       if required:
-#         required_key = kind, ancestor, props
-#         indexes = self.__indexes.get(app)
-#         if not indexes:
-#           raise apiproxy_errors.ApplicationError(
-#               datastore_pb.Error.NEED_INDEX,
-#               "This query requires a composite index, but none are defined. "
-#               "You must create an index.yaml file in your application root.")
-#         eq_filters_set = set(props[:num_eq_filters])
-#         remaining_filters = props[num_eq_filters:]
-#         for index in indexes:
-#           definition = datastore_admin.ProtoToIndexDefinition(index)
-#           index_key = datastore_index.IndexToKey(definition)
-#           if required_key == index_key:
-#             break
-#           if num_eq_filters > 1 and (kind, ancestor) == index_key[:2]:
-#             this_props = index_key[2]
-#             this_eq_filters_set = set(this_props[:num_eq_filters])
-#             this_remaining_filters = this_props[num_eq_filters:]
-#             if (eq_filters_set == this_eq_filters_set and
-#                 remaining_filters == this_remaining_filters):
-#               break
-#         else:
-#           raise apiproxy_errors.ApplicationError(
-#               datastore_pb.Error.NEED_INDEX,
-#               "This query requires a composite index that is not defined. "
-#               "You must update the index.yaml file in your application root.")
+    if self.__require_indexes:
+      required, kind, ancestor, props, num_eq_filters = datastore_index.CompositeIndexForQuery(query)
+      if required:
+        index = entity_pb.CompositeIndex()
+        index.mutable_definition().set_entity_type(kind)
+        index.mutable_definition().set_ancestor(ancestor)
+        for (k, v) in props:
+          p = index.mutable_definition().add_property()
+          p.set_name(k)
+          p.set_direction(v)
+
+        if props and not self.__has_index(index):
+          raise apiproxy_errors.ApplicationError(
+              datastore_pb.Error.NEED_INDEX,
+              "This query requires a composite index that is not defined. "
+              "You must update the index.yaml file in your application root.")
 
     collection = query.kind()
 
@@ -535,8 +461,6 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
         return
 
       spec[key] = value
-
-#     logging.getLogger().info(spec)
 
     cursor = self.__db[collection].find(spec)
 
@@ -673,106 +597,95 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
 #     for kind_pb in kinds:
 #       schema.add_kind().CopyFrom(kind_pb)
 
-  def __FindIndex(self, index):
-    """Finds an existing index by definition.
+  def __collection_and_spec_for_index(self, index):
+    def translate_name(ae_name):
+      if ae_name == "__key__":
+        return "_id"
+      return ae_name
 
-    Args:
-      definition: entity_pb.CompositeIndex
+    def translate_direction(ae_dir):
+      if ae_dir == 1:
+        return pymongo.ASCENDING
+      elif ae_dir == 2:
+        return pymongo.DESCENDING
+      raise apiproxy_errors.ApplicationError(datastore_pb.Error.BAD_REQUEST,
+                                             'Weird direction.')
 
-    Returns:
-      entity_pb.CompositeIndex, if it exists; otherwise None
-    """
-    app = index.app_id()
-    if app in self.__indexes:
-      for stored_index in self.__indexes[app]:
-        if index.definition() == stored_index.definition():
-          return stored_index
+    collection = index.definition().entity_type()
+    spec = []
+    for prop in index.definition().property_list():
+      spec.append((translate_name(prop.name()), translate_direction(prop.direction())))
 
-    return None
+    return (collection, spec)
+
+  def __has_index(self, index):
+    (collection, spec) = self.__collection_and_spec_for_index(index)
+    if self.__db[collection]._gen_index_name(spec) in self.__db[collection].index_information().keys():
+      return True
+    return False
 
   def _Dynamic_CreateIndex(self, index, id_response):
     if index.id() != 0:
       raise apiproxy_errors.ApplicationError(datastore_pb.Error.BAD_REQUEST,
                                              'New index id must be 0.')
-    elif self.__FindIndex(index):
+    elif self.__has_index(index):
+      logging.getLogger().info(index)
       raise apiproxy_errors.ApplicationError(datastore_pb.Error.BAD_REQUEST,
                                              'Index already exists.')
 
-    self.__index_id_lock.acquire()
-    index.set_id(self.__next_index_id)
-    id_response.set_value(self.__next_index_id)
-    self.__next_index_id += 1
-    self.__index_id_lock.release()
+    (collection, spec) = self.__collection_and_spec_for_index(index)
 
-    clone = entity_pb.CompositeIndex()
-    clone.CopyFrom(index)
-    app = index.app_id()
-    clone.set_app_id(app)
+    if spec: # otherwise it's probably an index w/ just an ancestor specifier
+      self.__db[collection].create_index(spec)
+      if self.__db.error():
+        raise apiproxy_errors.ApplicationError(datastore_pb.Error.BAD_REQUEST,
+                                               "Error creating index. Maybe too many indexes?")
 
-    self.__indexes_lock.acquire()
-    try:
-      if app not in self.__indexes:
-        self.__indexes[app] = []
-      self.__indexes[app].append(clone)
-    finally:
-      self.__indexes_lock.release()
+    # NOTE just give it a dummy id. we don't use these for anything...
+    id_response.set_value(1)
 
   def _Dynamic_GetIndices(self, app_str, composite_indices):
-    pass
-#     composite_indices.index_list().extend(
-#       self.__indexes.get(app_str.value(), []))
+    if app_str.value() != self.__db.name():
+      raise apiproxy_errors.ApplicationError(datastore_pb.Error.BAD_REQUEST,
+                                             "Getting indexes for a different app unsupported.")
+
+    def from_index_name(name):
+      elements = name.split("_")
+      index = []
+      while len(elements):
+        if not elements[0]:
+          elements = elements[1:]
+          elements[0] = "_" + elements[0]
+        index.append((elements[0], int(elements[1])))
+        elements = elements[2:]
+      return index
+
+    for collection in self.__db.collection_names():
+      info = self.__db[collection].index_information()
+      for index in info.keys():
+        index_pb = entity_pb.CompositeIndex()
+        index_pb.set_app_id(self.__db.name())
+        index_pb.mutable_definition().set_entity_type(collection)
+        index_pb.mutable_definition().set_ancestor(False)
+        index_pb.set_state(2) # READ_WRITE
+        index_pb.set_id(1) # bogus id
+        for (k, v) in from_index_name(index):
+          if k == "_id":
+            k = "__key__"
+          p = index_pb.mutable_definition().add_property()
+          p.set_name(k)
+          p.set_direction(v == pymongo.ASCENDING and 1 or 2)
+        composite_indices.index_list().append(index_pb)
 
   def _Dynamic_UpdateIndex(self, index, void):
-    pass
-#     stored_index = self.__FindIndex(index)
-#     if not stored_index:
-#       raise apiproxy_errors.ApplicationError(datastore_pb.Error.BAD_REQUEST,
-#                                              "Index doesn't exist.")
-#     elif (index.state() != stored_index.state() and
-#           index.state() not in self._INDEX_STATE_TRANSITIONS[stored_index.state()]):
-#       raise apiproxy_errors.ApplicationError(
-#         datastore_pb.Error.BAD_REQUEST,
-#         "cannot move index state from %s to %s" %
-#           (entity_pb.CompositeIndex.State_Name(stored_index.state()),
-#           (entity_pb.CompositeIndex.State_Name(index.state()))))
-
-#     self.__indexes_lock.acquire()
-#     try:
-#       stored_index.set_state(index.state())
-#     finally:
-#       self.__indexes_lock.release()
+    logging.log(logging.WARN, 'update index unsupported')
 
   def _Dynamic_DeleteIndex(self, index, void):
-    pass
-#     stored_index = self.__FindIndex(index)
-#     if not stored_index:
-#       raise apiproxy_errors.ApplicationError(datastore_pb.Error.BAD_REQUEST,
-#                                              "Index doesn't exist.")
+    (collection, spec) = self.__collection_and_spec_for_index(index)
+    if not spec:
+      return
 
-#     app = index.app_id()
-#     self.__indexes_lock.acquire()
-#     try:
-#       self.__indexes[app].remove(stored_index)
-#     finally:
-#       self.__indexes_lock.release()
-
-  @classmethod
-  def __GetSpecialPropertyValue(cls, entity, property):
-    """Returns an entity's value for a special property.
-
-    Right now, the only special property is __key__, whose value is the
-    entity's key.
-
-    Args:
-      entity: datastore.Entity
-
-    Returns:
-      property value. For __key__, a datastore_types.Key.
-
-    Raises:
-      AssertionError, if the given property is not special.
-    """
-    assert property in datastore_types._SPECIAL_PROPERTIES
-    if property == datastore_types._KEY_SPECIAL_PROPERTY:
-      return entity.key()
-
+    if not self.__has_index(index):
+      raise apiproxy_errors.ApplicationError(datastore_pb.Error.BAD_REQUEST,
+                                             "Index doesn't exist.")
+    self.__db[collection].drop_index(spec)

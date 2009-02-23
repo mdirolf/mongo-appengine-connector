@@ -58,3 +58,6 @@ will be performed transaction-less.
 DateTime values get rounded to the nearest millisecond when saved to
 MongoDB. This is a limitation of MongoDB's date representation, and is
 not specific to this adaptor.
+
+In order to actually create indexes the dev_appserver must be run with
+the --require-indexes option.

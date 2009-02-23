@@ -619,6 +619,12 @@ assert FilterTest.all().filter('num >=', 10).count() == 3
 assert FilterTest.all().filter('num >', 10).count() == 2
 assert FilterTest.all().filter('num !=', 8).count() == 6
 
+assert FilterTest.all().filter('num <', 10).filter('num >=', 2).count() == 3
+assert FilterTest.all().filter('num =', 10).filter('num >=', 2).count() == 1
+assert FilterTest.all().filter('num =', 10).filter('num <', 2).count() == 0
+assert FilterTest.all().filter('num =', 10).filter('num =', 2).count() == 0
+assert FilterTest.all().filter('num =', 10).filter('num =', 10).count() == 1
+
 print 'Test deleting an entity directly using its key...<br/>'
 db.delete(key)
 assert CountTest.all().count() == 15

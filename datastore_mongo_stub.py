@@ -386,6 +386,9 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
 
     app = query.app()
 
+    query_result.mutable_cursor().set_cursor(0)
+    query_result.set_more_results(False)
+
     if self.__require_indexes:
       required, kind, ancestor, props, num_eq_filters = datastore_index.CompositeIndexForQuery(query)
       if required:
@@ -418,8 +421,6 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
     # the types of the properties)...
     prototype = self.__db[collection].find_one()
     if prototype is None:
-      query_result.mutable_cursor().set_cursor(0)
-      query_result.set_more_results(False)
       return
     prototype = datastore.Entity._FromPb(self.__entity_for_mongo_document(prototype))
 
@@ -446,20 +447,24 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
 
       (key, value) = self.__filter_binding(prop, filter_val_list[0], op, prototype)
 
-      # TODO this can't be the right way to handle this case... need more tests
       if key in spec:
-        query_result.mutable_cursor().set_cursor(0)
-        query_result.set_more_results(False)
-        return
-
-      spec[key] = value
+        if not isinstance(spec[key], types.DictType) and not isinstance(value, types.DictType):
+          if spec[key] != value:
+            return
+        elif not isinstance(spec[key], types.DictType):
+          value["$in"] = [spec[key]]
+          spec[key] = value
+        elif not isinstance(value, types.DictType):
+          spec[key]["$in"] = [value]
+        else:
+          spec[key].update(value)
+      else:
+        spec[key] = value
 
     cursor = self.__db[collection].find(spec)
 
     order = self.__translate_order_for_mongo(query.order_list(), prototype)
     if order is None:
-      query_result.mutable_cursor().set_cursor(0)
-      query_result.set_more_results(False)
       return
     if order:
       cursor = cursor.sort(order)
@@ -476,13 +481,13 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
     self.__queries[cursor_index] = cursor
 
     query_result.mutable_cursor().set_cursor(cursor_index)
-    query_result.set_more_results(True) # see if we can get away with always feigning more results
+    query_result.set_more_results(True)
 
   def _Dynamic_Next(self, next_request, query_result):
     cursor = next_request.cursor().cursor()
+    query_result.set_more_results(False)
 
     if cursor == 0: # we exited early from the query w/ no results...
-      query_result.set_more_results(False)
       return
 
     try:
@@ -496,7 +501,6 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
       try:
         query_result.result_list().append(self.__entity_for_mongo_document(cursor.next()))
       except StopIteration:
-        query_result.set_more_results(False)
         return
     query_result.set_more_results(True)
 

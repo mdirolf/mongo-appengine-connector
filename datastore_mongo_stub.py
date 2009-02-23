@@ -110,8 +110,6 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
     self.__next_cursor = 1
     self.__queries = {}
 
-    # TODO build indexes from index.yaml
-
   def MakeSyncCall(self, service, call, request, response):
     """ The main RPC entry point. service must be 'datastore_v3'. So far, the
     supported calls are 'Get', 'Put', 'RunQuery', 'Next', and 'Count'.

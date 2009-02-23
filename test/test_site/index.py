@@ -309,6 +309,9 @@ assert CountTest.all().filter('prop =', 'hello').count(5) == 5
 assert CountTest.all().filter('prop =', 'goodbye').count() == 3
 assert CountTest.all().filter('prop =', 'hello').filter('prop =', 'goodbye').count() == 0
 
+assert CountTest.all().filter('prop !=', 'hello').count() == 3
+assert CountTest.all().filter('prop !=', 'goodbye').count() == 7
+
 print 'Test filtering on a non-existent key...<br/>'
 assert CountTest.all().filter('test <', 5).count() == 0
 
@@ -382,6 +385,11 @@ assert KeySortTest.gql('WHERE __key__ < :1', zero).count() != KeySortTest.gql('W
 assert KeySortTest.gql('WHERE __key__ < :1', zero).count() + KeySortTest.gql('WHERE __key__ >= :1', zero).count() == 6
 
 res = KeySortTest.gql('ORDER BY __key__')
+assert res[3].x == 3
+assert res[4].x == 5
+assert res[5].x == 1
+
+res = KeySortTest.all().order('__key__')
 assert res[3].x == 3
 assert res[4].x == 5
 assert res[5].x == 1
@@ -609,7 +617,7 @@ assert FilterTest.all().filter('num =', 6).count() == 0
 assert FilterTest.all().filter('num =', 8).count() == 2
 assert FilterTest.all().filter('num >=', 10).count() == 3
 assert FilterTest.all().filter('num >', 10).count() == 2
-
+assert FilterTest.all().filter('num !=', 8).count() == 6
 
 print 'Test deleting an entity directly using its key...<br/>'
 db.delete(key)
@@ -711,6 +719,8 @@ numbers = db.GqlQuery("SELECT * FROM FilterTest WHERE num = :1", 8)
 assert numbers.count() == 2
 numbers = db.GqlQuery("SELECT * FROM FilterTest WHERE num = :number", hello="mike", number=19)
 assert numbers.count() == 1
+
+assert db.GqlQuery("SELECT * FROM FilterTest WHERE num != 8").count() == 6
 
 print 'Test the different arguments to property constructors...<br/>'
 

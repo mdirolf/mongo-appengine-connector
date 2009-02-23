@@ -60,4 +60,9 @@ MongoDB. This is a limitation of MongoDB's date representation, and is
 not specific to this adaptor.
 
 In order to actually create indexes the dev_appserver must be run with
-the --require-indexes option.
+the --require-indexes option. Running with this option will probably
+add significant overhead, since each time the dev_appserver checks to
+see if it should create an index a query is performed.
+
+Index creation ignores the "Ancestor" option. This option would just create an
+index on '_id', which (soon) MongoDB creates automatically anyway.

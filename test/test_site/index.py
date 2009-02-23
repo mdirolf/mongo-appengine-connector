@@ -1065,4 +1065,16 @@ assert Everything.all().order('list').order('blob').get() == None
 assert Everything.all().order('blob').order('list').get() == None
 assert Everything.all().order('list').order('-bool').get().str == 'goodbye'
 
+print 'Test a ByteString...<br/>'
+class TestBytes(db.Model):
+    a = db.ByteStringProperty()
+
+for result in TestBytes.all().fetch(1000):
+    result.delete()
+
+test = TestBytes(a="\x05\x22aek")
+out = db.get(test.put())
+assert out.a == test.a
+assert isinstance(out, test.__class__)
+
 print '</body></html>'

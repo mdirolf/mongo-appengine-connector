@@ -174,6 +174,11 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
         }
     if isinstance(value, datastore_types.Blob):
       return Binary(value)
+    if isinstance(value, datastore_types.ByteString):
+      return {
+        'class': 'bytes',
+        'value': Binary(value)
+        }
     if isinstance(value, datastore_types.IM):
       return {
         'class': 'im',
@@ -215,6 +220,8 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
         return datastore_types.GeoPt(mongo_value['lat'], mongo_value['lon'])
       if mongo_value['class'] == 'email':
         return datastore_types.Email(mongo_value['value'])
+      if mongo_value['class'] == 'bytes':
+        return datastore_types.ByteString(mongo_value['value'])
     return mongo_value
 
   def __mongo_document_for_entity(self, entity):

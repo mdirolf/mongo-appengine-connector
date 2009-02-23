@@ -531,69 +531,8 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
     logging.log(logging.WARN, 'transactions unsupported')
 
   def _Dynamic_GetSchema(self, app_str, schema):
+    # TODO this is used for the admin viewer to introspect.
     pass
-#     minint = -sys.maxint - 1
-#     try:
-#       minfloat = float('-inf')
-#     except ValueError:
-#       minfloat = -1e300000
-
-#     app_str = app_str.value()
-
-#     kinds = []
-
-#     for app, kind in self.__entities:
-#       if app == app_str:
-#         app_kind = (app, kind)
-#         if app_kind in self.__schema_cache:
-#           kinds.append(self.__schema_cache[app_kind])
-#           continue
-
-#         kind_pb = entity_pb.EntityProto()
-#         kind_pb.mutable_key().set_app('')
-#         kind_pb.mutable_key().mutable_path().add_element().set_type(kind)
-#         kind_pb.mutable_entity_group()
-
-#         props = {}
-
-#         for entity in self.__entities[app_kind].values():
-#           for prop in entity.protobuf.property_list():
-#             if prop.name() not in props:
-#               props[prop.name()] = entity_pb.PropertyValue()
-#             props[prop.name()].MergeFrom(prop.value())
-
-#         for value_pb in props.values():
-#           if value_pb.has_int64value():
-#             value_pb.set_int64value(minint)
-#           if value_pb.has_booleanvalue():
-#             value_pb.set_booleanvalue(False)
-#           if value_pb.has_stringvalue():
-#             value_pb.set_stringvalue('')
-#           if value_pb.has_doublevalue():
-#             value_pb.set_doublevalue(minfloat)
-#           if value_pb.has_pointvalue():
-#             value_pb.mutable_pointvalue().set_x(minfloat)
-#             value_pb.mutable_pointvalue().set_y(minfloat)
-#           if value_pb.has_uservalue():
-#             value_pb.mutable_uservalue().set_gaiaid(minint)
-#             value_pb.mutable_uservalue().set_email('')
-#             value_pb.mutable_uservalue().set_auth_domain('')
-#             value_pb.mutable_uservalue().clear_nickname()
-#           elif value_pb.has_referencevalue():
-#             value_pb.clear_referencevalue()
-#             value_pb.mutable_referencevalue().set_app('')
-
-#         for name, value_pb in props.items():
-#           prop_pb = kind_pb.add_property()
-#           prop_pb.set_name(name)
-#           prop_pb.set_multiple(False)
-#           prop_pb.mutable_value().CopyFrom(value_pb)
-
-#         kinds.append(kind_pb)
-#         self.__schema_cache[app_kind] = kind_pb
-
-#     for kind_pb in kinds:
-#       schema.add_kind().CopyFrom(kind_pb)
 
   def __collection_and_spec_for_index(self, index):
     def translate_name(ae_name):

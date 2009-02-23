@@ -21,39 +21,26 @@ MongoDB backed stub for the Python datastore API.
 Transactions are unsupported.
 """
 
-import datetime
 import logging
-import os
-import struct
 import sys
-import tempfile
 import threading
-import warnings
 import types
 import re
 import random
 
-from google.appengine.api import api_base_pb
 from google.appengine.api import apiproxy_stub
 from google.appengine.api import datastore
-from google.appengine.api import datastore_admin
-from google.appengine.api import datastore_errors
 from google.appengine.api import datastore_types
 from google.appengine.api import users
 from google.appengine.datastore import datastore_pb
 from google.appengine.datastore import datastore_index
 from google.appengine.runtime import apiproxy_errors
-from google.net.proto import ProtocolBuffer
 from google.appengine.datastore import entity_pb
 
 import pymongo
 from pymongo.connection import Connection
 from pymongo.binary import Binary
 
-warnings.filterwarnings('ignore', 'tempnam is a potential security risk')
-
-
-entity_pb.Reference.__hash__ = lambda self: hash(self.Encode())
 datastore_pb.Query.__hash__ = lambda self: hash(self.Encode())
 
 _MAXIMUM_RESULTS = 1000

@@ -48,11 +48,9 @@ _MAX_QUERY_OFFSET = 1000
 _MAX_QUERY_COMPONENTS = 100
 
 class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
-  """ Persistent stub for the Python datastore API.
+  """Persistent stub for the Python datastore API, using MongoDB to persist.
 
-  Stores all entities in memory, and persists them to a file as pickled
-  protocol buffers. A DatastoreMongoStub instance handles a single app's data
-  and is backed by files on disk.
+  A DatastoreMongoStub instance handles a single app's data.
   """
 
   def __init__(self,
@@ -63,14 +61,12 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
                service_name='datastore_v3'):
     """Constructor.
 
-    Initializes and loads the datastore from the backing files, if they exist.
+    Initializes the datastore stub.
 
     Args:
       app_id: string
-      datastore_file: string, stores all entities across sessions.  Use None
-          not to use a file.
-      history_file: string, stores query history.  Use None as with
-          datastore_file.
+      datastore_file: ignored
+      history_file: ignored
       require_indexes: bool, default False.  If True, composite indexes must
           exist in index.yaml for queries that need them.
       service_name: Service name expected for all calls.

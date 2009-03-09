@@ -56,24 +56,25 @@ applied against a clean version of the AppEngine svn repository.
 
 Other Notes
 ===========
-You must have a copy of the `PyMongo distribution <http://pypi.python.org/pypi/pymongo/>`_
-installed in order to use the AppEngine Connector.
 
-Right now, the Connection cannot be configured. It attempts to
-connect to a standalone MongoDB instance on localhost:27017.
+- You must have a copy of the `PyMongo distribution <http://pypi.python.org/pypi/pymongo/>`_
+  installed in order to use the AppEngine Connector.
 
-Transactions are unsupported. When any operation requiring
-transactions is performed a warning will be logged and the operation
-will be performed transaction-less.
+- Right now, the Connection cannot be configured. It attempts to
+  connect to a standalone MongoDB instance on localhost:27017.
 
-DateTime values get rounded to the nearest millisecond when saved to
-MongoDB. This is a limitation of MongoDB's date representation, and is
-not specific to this adaptor.
+- Transactions are unsupported. When any operation requiring
+  transactions is performed a warning will be logged and the operation
+  will be performed transaction-less.
 
-In order to actually create indexes the dev_appserver must be run with
-the --require-indexes option. Running with this option will probably
-add significant overhead, since each time the dev_appserver checks to
-see if it should create an index a query is performed.
+- DateTime values get rounded to the nearest millisecond when saved to
+  MongoDB. This is a limitation of MongoDB's date representation, and is
+  not specific to this adaptor.
 
-Index creation ignores the "Ancestor" option. This option would just create an
-index on '_id', which (soon) MongoDB creates automatically anyway.
+- In order to actually create indexes the dev_appserver must be run with
+  the --require-indexes option. Running with this option will probably
+  add significant overhead, since each time the dev_appserver checks to
+  see if it should create an index a query is performed.
+
+- Index creation ignores the "Ancestor" option. This option would just create an
+  index on '_id', which (soon) MongoDB creates automatically anyway.

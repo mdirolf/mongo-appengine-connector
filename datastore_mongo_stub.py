@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2007 Google Inc.
+# Copyright 2007 Google Inc., 2008-2009 10gen Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

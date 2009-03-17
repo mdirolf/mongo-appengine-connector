@@ -1,20 +1,20 @@
 
-=========================
+===========================
 MongoDB AppEngine Connector
-=========================
+===========================
 :Info: See `the mongodb site <http://www.mongodb.org>`_ for more  information.  See `github <http://github.com/mongodb/mongo-appengine-connector/tree>`_ for the latest source.
 :Author: Mike Dirolf <mike@10gen.com>
 
 About
 =====
-The MongoDB AppEngine Connectory provides a drop-in replacement for App Engine's
+The MongoDB AppEngine Connector provides a drop-in replacement for App Engine's
 datastore API, using MongoDB as a backend.
 
 Questions and Support
-====================
+=====================
 
 Questions about the MongoDB AppEngine Connector should be directed to the mongodb-user
-group at Google Groups. 
+group at Google Groups.
 
  http://groups.google.com/group/mongodb-user
 
@@ -22,11 +22,11 @@ Usage
 =====
 
 In order to use the adapter, you must patch the AppEngine source
-distribution.  Google AE source can be found at Google Code : 
+distribution.  Google AE source can be found at Google Code :
 
       http://code.google.com/p/googleappengine/
 
-and to check out a read-only copy of the svn repository : 
+and to check out a read-only copy of the svn repository :
 
 $ svn checkout http://googleappengine.googlecode.com/svn/trunk/ googleappengine-read-only
 
@@ -85,7 +85,7 @@ that you've checked out the source as a read-only repo :
 $ cd googleappengine-read-only
 $ patch -p0 < gae_patch_r41.txt
 
-you should see output similar to 
+you should see output similar to
 
  patching file dev_appserver.py
  patching file google/appengine/tools/dev_appserver.py

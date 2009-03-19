@@ -95,7 +95,7 @@ AppEngine SDK::
 
   $ ./dev_appserver.py /my/path/to/mongodb-appengine-connector/test/test_site
 
-Then, if you direct your browser to *http://localhost:808* you should see a single test
+Then, if you direct your browser to *http://localhost:8080* you should see a single test
 page that begins with::
 
   Datastore API

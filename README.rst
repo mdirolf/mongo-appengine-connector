@@ -112,9 +112,6 @@ and as long as you don't see the word 'FAIL', all tests pass and you are ready t
 Other Notes
 ===========
 
-- You must have a copy of the `PyMongo distribution <http://pypi.python.org/pypi/pymongo/>`_
-  installed in order to use the AppEngine Connector.
-
 - Right now, the Connection cannot be configured. It attempts to
   connect to a standalone MongoDB instance on localhost:27017.
 

@@ -107,7 +107,7 @@ page that begins with::
   Test a delete on an unsaved object...
   ...
 
-and as long as you don't see the word 'FAIL', all tests pass and you are ready to go.
+As long as you don't see the word **FAIL** all tests have passed.
 
 Other Notes
 ===========

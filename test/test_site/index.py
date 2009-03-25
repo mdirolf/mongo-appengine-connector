@@ -1,3 +1,20 @@
+#!/usr/bin/env python
+#
+# Copyright 2008-2009 10gen Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.api import datastore
@@ -1082,5 +1099,122 @@ test = TestBytes(a="\x05\x22aek")
 out = db.get(test.put())
 assert out.a == test.a
 assert isinstance(out, test.__class__)
+
+# The remaining tests are adapted from here:
+# http://code.google.com/p/gae-sqlite/source/browse/trunk/unittests.py
+# Which is copyright 2008 Jens Scheffler and used under the Apache License v2.0
+class TestModel(db.Model):
+    text = db.StringProperty(default="some text")
+    number = db.IntegerProperty(default=42)
+    float = db.FloatProperty(default=3.14)
+    cond1 = db.BooleanProperty(default=True)
+    cond2 = db.BooleanProperty(default=False)
+
+for result in TestModel.all().fetch(1000):
+    result.delete()
+
+print 'Test writing a value twice...<br/>'
+model = TestModel()
+key = model.put()
+id = key._Key__reference.path().element_list()[-1].id()
+key = model.put()
+id2 = key._Key__reference.path().element_list()[-1].id()
+assert id == id2
+
+print 'Test getting a single model from the datastore...<br/>'
+model1 = TestModel(number=1)
+model2 = TestModel(number=2, text='#2')
+model3 = TestModel(number=3)
+key1 = model1.put()
+key2 = model2.put()
+key3 = model3.put()
+fetched = TestModel.get(key2)
+assert 2 == fetched.number
+assert '#2' == fetched.text
+assert 3.14 == fetched.float
+assert True == fetched.cond1
+assert False == fetched.cond2
+
+print 'Test getting a single model from the datastore with a string key...<br/>'
+model1 = TestModel(number=1)
+model2 = TestModel(key_name='custom', number=2, text='#2')
+model3 = TestModel(number=3)
+key1 = model1.put()
+key2 = model2.put()
+key3 = model3.put()
+fetched = TestModel.get_by_key_name('custom')
+assert 2 == fetched.number
+assert '#2' == fetched.text
+
+print 'Test getting several models from the datastore...<br/>'
+model1 = TestModel(number=1)
+model2 = TestModel(number=2)
+model3 = TestModel(number=3)
+key1 = model1.put()
+key2 = model2.put()
+key3 = model3.put()
+fetched = TestModel.get([key2, key1])
+assert 2 == len(fetched)
+assert 2 == fetched[0].number
+assert 1 == fetched[1].number
+
+print 'Test if get_or_insert works correctly...<br/>'
+model1 = TestModel(number=1)
+model1.put()
+model2 = TestModel.get_or_insert('foo', number=13, text='t')
+assert 13 == model2.number
+fetched = TestModel.get_by_key_name('foo')
+assert 13 == fetched.number
+
+print 'Test a simple query...<br/>'
+model = TestModel(text='t1', number=13)
+model.put()
+data = TestModel.gql(
+    'WHERE text=:1 and number=:2 order by text desc',
+    't1', 13).fetch(5)
+assert 1 == len(data)
+assert 't1' == data[0].text
+assert 13 == data[0].number
+
+print 'Test query on non-existent field...<br/>'
+model = TestModel(text='t1', number=13)
+model.put()
+data = TestModel.gql(
+    'WHERE text2=:1 and number=:2 order by text desc',
+    't1', 13).fetch(5)
+assert 0 == len(data)
+
+print 'Test query on non-existent collection...<br/>'
+class UnknownKind(TestModel):
+    pass
+data = UnknownKind.gql(
+    'WHERE text=:1', 't1').fetch(5)
+assert 0 == len(data)
+
+print 'Test storing an unknown kind of Model...<br/>'
+class UnknownKind(TestModel):
+    pass
+model = UnknownKind()
+model.put()
+
+print 'Test what happens if a field gets added to a model...<br/>'
+class Mutation(TestModel):
+    @classmethod
+    def kind(cls):
+        return 'TestModel'
+    text2 = db.StringProperty(default='some more text')
+model = Mutation(text='Text 1', text2='Text 2')
+model.put()
+model.delete()
+
+print 'Test what happens if a field changes its type...<br/>'
+class Mutation(db.Model):
+    @classmethod
+    def kind(cls):
+        return 'TestModel'
+    text = db.IntegerProperty(default=42)
+model = Mutation(text=23)
+model.put()
+model.delete()
 
 print '</body></html>'

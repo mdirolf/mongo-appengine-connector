@@ -50,12 +50,12 @@ that you checked out, go into the root of the repository and type::
 
   $ svn info
 
-This adapter has been tested against revision 41 from Google
+This adapter has been tested against revisions 46 from Google
 AppEngine's svn repository. To apply the patch, do
 the following from a command line::
 
   $ cd googleappengine-read-only
-  $ patch -p0 < gae_patch_r41.txt
+  $ patch -p0 < gae_patch_r46.txt
 
 you should see output similar to::
 

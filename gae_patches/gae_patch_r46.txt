@@ -1,7 +1,7 @@
-Index: python/dev_appserver.py
+Index: dev_appserver.py
 ===================================================================
---- python/dev_appserver.py (revision 46)
-+++ python/dev_appserver.py (working copy)
+--- dev_appserver.py (revision 46)
++++ dev_appserver.py (working copy)
 @@ -37,6 +37,7 @@
  SCRIPT_DIR = os.path.join(DIR_PATH, 'google', 'appengine', 'tools')
 
@@ -10,10 +10,10 @@ Index: python/dev_appserver.py
    DIR_PATH,
    os.path.join(DIR_PATH, 'lib', 'antlr3'),
    os.path.join(DIR_PATH, 'lib', 'django'),
-Index: python/google/appengine/tools/dev_appserver.py
+Index: google/appengine/tools/dev_appserver.py
 ===================================================================
---- python/google/appengine/tools/dev_appserver.py  (revision 46)
-+++ python/google/appengine/tools/dev_appserver.py  (working copy)
+--- google/appengine/tools/dev_appserver.py  (revision 46)
++++ google/appengine/tools/dev_appserver.py  (working copy)
 @@ -76,7 +76,7 @@
  from google.appengine.api import appinfo
  from google.appengine.api import croninfo

@@ -55,6 +55,7 @@ AppEngine's svn repository. To apply the patch, do
 the following from a command line::
 
   $ cd googleappengine-read-only
+  $ cd python/ # need to do this if you checked out all the different AE languages
   $ patch -p0 < gae_patch_r46.txt
 
 you should see output similar to::

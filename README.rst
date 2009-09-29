@@ -44,19 +44,17 @@ directory.
 Patch the AppEngine Code
 ------------------------
 
-Patches are found in the *gae_patches/* directory and are stored by
-svn revision number.  To find the revision number of the repository
+This adapter has been tested against revision 77 from Google
+AppEngine's svn repository. To find the revision number of the repository
 that you checked out, go into the root of the repository and type::
 
   $ svn info
 
-This adapter has been tested against revisions 46 from Google
-AppEngine's svn repository. To apply the patch, do
-the following from a command line::
+To apply the patch, do the following from a command line::
 
   $ cd googleappengine-read-only
   $ cd python/ # need to do this if you checked out all the different AE languages
-  $ patch -p0 < gae_patch_r46.txt
+  $ patch -p0 < gae_patch.txt
 
 you should see output similar to::
 

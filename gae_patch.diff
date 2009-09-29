@@ -1,10 +1,10 @@
 Index: dev_appserver.py
 ===================================================================
---- dev_appserver.py (revision 46)
-+++ dev_appserver.py (working copy)
+--- dev_appserver.py	(revision 77)
++++ dev_appserver.py	(working copy)
 @@ -37,6 +37,7 @@
  SCRIPT_DIR = os.path.join(DIR_PATH, 'google', 'appengine', 'tools')
-
+ 
  EXTRA_PATHS = [
 +  "PATH/TO/MONGO-APPENGINE-CONNECTOR/DIRECTORY",
    DIR_PATH,
@@ -12,9 +12,9 @@ Index: dev_appserver.py
    os.path.join(DIR_PATH, 'lib', 'django'),
 Index: google/appengine/tools/dev_appserver.py
 ===================================================================
---- google/appengine/tools/dev_appserver.py  (revision 46)
-+++ google/appengine/tools/dev_appserver.py  (working copy)
-@@ -76,7 +76,7 @@
+--- google/appengine/tools/dev_appserver.py	(revision 77)
++++ google/appengine/tools/dev_appserver.py	(working copy)
+@@ -84,7 +84,7 @@
  from google.appengine.api import appinfo
  from google.appengine.api import croninfo
  from google.appengine.api import datastore_admin
@@ -23,12 +23,15 @@ Index: google/appengine/tools/dev_appserver.py
  from google.appengine.api import mail_stub
  from google.appengine.api import urlfetch_stub
  from google.appengine.api import user_service_stub
-@@ -3040,7 +3040,7 @@
-
+@@ -3311,9 +3311,8 @@
+ 
    apiproxy_stub_map.apiproxy = apiproxy_stub_map.APIProxyStubMap()
-
+ 
 -  datastore = datastore_file_stub.DatastoreFileStub(
+-      app_id, datastore_path, history_path, require_indexes=require_indexes,
+-      trusted=trusted)
 +  datastore = datastore_mongo_stub.DatastoreMongoStub(
-       app_id, datastore_path, history_path, require_indexes=require_indexes)
++      app_id, datastore_path, history_path, require_indexes=require_indexes)
    apiproxy_stub_map.apiproxy.RegisterStub('datastore_v3', datastore)
-
+ 
+   fixed_login_url = '%s?%s=%%s' % (login_url,

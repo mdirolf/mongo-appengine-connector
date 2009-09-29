@@ -54,7 +54,7 @@ To apply the patch, do the following from a command line::
 
   $ cd googleappengine-read-only
   $ cd python/ # need to do this if you checked out all the different AE languages
-  $ patch -p0 < gae_patch.txt
+  $ patch -p0 < gae_patch.diff
 
 you should see output similar to::
 
@@ -128,4 +128,10 @@ Other Notes
   see if it should create an index a query is performed.
 
 - Index creation ignores the "Ancestor" option. This option would just create an
-  index on '_id', which (soon) MongoDB creates automatically anyway.
+  index on '_id', which MongoDB creates automatically anyway.
+
+Credits
+=======
+- Tobias Rodäbel <tobias.rodaebel@googlemail.com>
+
+  - Fix for newer versions of AppEngine

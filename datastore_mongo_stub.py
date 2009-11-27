@@ -371,6 +371,9 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
       raise apiproxy_errors.ApplicationError(
           datastore_pb.Error.BAD_REQUEST, 'Too big query offset.')
 
+    if query.keys_only():
+      query_result.set_keys_only(True)
+
     num_components = len(query.filter_list()) + len(query.order_list())
     if query.has_ancestor():
       num_components += 1

@@ -540,6 +540,9 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
     # TODO this is used for the admin viewer to introspect.
     pass
 
+  def _Dynamic_AllocateIds(self, allocate_ids_request, allocate_ids_response):
+    logging.log(logging.WARN, 'pre-allocating IDs unsupported')
+
   def __collection_and_spec_for_index(self, index):
     def translate_name(ae_name):
       if ae_name == "__key__":

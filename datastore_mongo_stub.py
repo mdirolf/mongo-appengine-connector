@@ -192,6 +192,11 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
         'class': 'email',
         'value': value,
         }
+    if isinstance(value, datastore_types.BlobKey):
+      return {
+        'class': 'blobkey',
+        'value': value,
+        }
     return value
 
   def __create_value_for_mongo_value(self, mongo_value):
@@ -218,6 +223,8 @@ class DatastoreMongoStub(apiproxy_stub.APIProxyStub):
         return datastore_types.Email(mongo_value['value'])
       if mongo_value['class'] == 'bytes':
         return datastore_types.ByteString(mongo_value['value'])
+      if mongo_value['class'] == 'blobkey':
+        return datastore_types.BlobKey(mongo_value['value'])
     return mongo_value
 
   def __mongo_document_for_entity(self, entity):

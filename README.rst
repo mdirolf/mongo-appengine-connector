@@ -130,8 +130,10 @@ Other Notes
 - Index creation ignores the "Ancestor" option. This option would just create an
   index on '_id', which MongoDB creates automatically anyway.
 
-Credits
+Authors
 =======
-- Tobias Rodäbel <tobias.rodaebel@googlemail.com>
+- Mike Dirolf (mdirolf)
+  - Original implementation
 
-  - Fix for newer versions of AppEngine
+- Tobias Rodäbel (Tobias)
+  - Fixes and maintenance for newer versions of AppEngine

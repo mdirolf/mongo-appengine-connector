@@ -135,5 +135,5 @@ Authors
 - Mike Dirolf (mdirolf)
   - Original implementation
 
-- Tobias Rodäbel (Tobias)
+- Tobias Rodabel (Tobias)
   - Fixes and maintenance for newer versions of AppEngine
